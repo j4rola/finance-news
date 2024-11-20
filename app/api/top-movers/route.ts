@@ -3,16 +3,19 @@ import { NextResponse } from 'next/server';
 const API_KEY = process.env.API_KEY;
 
 interface TopMoverItem {
-  '1. symbol': string;
-  '2. name': string;
-  '3. change': string;
-  '4. price': string;
-  '5. change percent': string;
+  ticker: string;
+  price: string;
+  change_amount: string;
+  change_percentage: string;
+  volume: string;
 }
 
 interface AlphaVantageTopMoversResponse {
-  'top gainers': TopMoverItem[];
-  'top losers': TopMoverItem[];
+  metadata: string;
+  last_updated: string;
+  top_gainers: TopMoverItem[];
+  top_losers: TopMoverItem[];
+  most_actively_traded: TopMoverItem[];
 }
 
 export async function GET() {
@@ -39,21 +42,24 @@ export async function GET() {
 
     const data: AlphaVantageTopMoversResponse = await response.json();
     
+    // Log the response for debugging
+    console.log('Alpha Vantage Response:', JSON.stringify(data, null, 2));
+
     // Transform the data to a cleaner format
     const transformed = {
-      gainers: (data['top gainers'] || []).map(item => ({
-        symbol: item['1. symbol'],
-        name: item['2. name'],
-        change: parseFloat(item['3. change']),
-        price: item['4. price'],
-        change_percent: item['5. change percent']
+      gainers: (data.top_gainers || []).map(item => ({
+        symbol: item.ticker,
+        name: item.ticker, // Alpha Vantage doesn't provide company names in this endpoint
+        change: parseFloat(item.change_amount),
+        price: item.price,
+        change_percent: item.change_percentage
       })),
-      losers: (data['top losers'] || []).map(item => ({
-        symbol: item['1. symbol'],
-        name: item['2. name'],
-        change: parseFloat(item['3. change']),
-        price: item['4. price'],
-        change_percent: item['5. change percent']
+      losers: (data.top_losers || []).map(item => ({
+        symbol: item.ticker,
+        name: item.ticker, // Alpha Vantage doesn't provide company names in this endpoint
+        change: parseFloat(item.change_amount),
+        price: item.price,
+        change_percent: item.change_percentage
       }))
     };
 
