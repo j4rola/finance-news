@@ -1,9 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, ExternalLink, Tag } from 'lucide-react';
 import type { NewsItem, NewsApiResponse } from '@/types/news';
 
 const FinancialNews: React.FC = () => {
@@ -39,71 +36,66 @@ const FinancialNews: React.FC = () => {
 
   if (error) {
     return (
-      <Card className="w-full bg-red-50">
-        <CardContent className="p-6">
-          <p className="text-red-600">Error loading news: {error}</p>
-        </CardContent>
-      </Card>
+      <div className="w-full rounded-lg bg-red-50 p-6">
+        <p className="text-red-600">Error loading news: {error}</p>
+      </div>
     );
   }
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Financial News</CardTitle>
-          <CardDescription>Latest updates from Yahoo Finance</CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="w-full rounded-lg bg-white shadow p-6">
+        <h2 className="text-2xl font-bold">Financial News</h2>
+        <p className="text-gray-600">Latest updates from Yahoo Finance</p>
+      </div>
 
       {loading ? (
+        // Simple loading state without Skeleton component
         Array(3).fill(null).map((_, i) => (
-          <Card key={i} className="w-full">
-            <CardContent className="p-6 space-y-4">
-              <Skeleton className="h-6 w-3/4" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-2/3" />
-              <div className="flex gap-4 mt-4">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-24" />
-              </div>
-            </CardContent>
-          </Card>
+          <div key={i} className="w-full rounded-lg bg-white shadow p-6 animate-pulse">
+            <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-2/3 mb-4"></div>
+            <div className="flex gap-4">
+              <div className="h-4 bg-gray-200 rounded w-24"></div>
+              <div className="h-4 bg-gray-200 rounded w-24"></div>
+            </div>
+          </div>
         ))
       ) : (
         news.map((item, index) => (
-          <Card key={index} className="w-full hover:shadow-lg transition-shadow duration-200">
-            <CardContent className="p-6">
-              <a 
-                href={item.link} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="group"
-              >
-                <h3 className="text-xl font-semibold mb-3 group-hover:text-blue-600 flex items-center gap-2">
-                  {item.title}
-                  <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </h3>
-              </a>
-              
-              <p className="text-gray-600 mb-4 line-clamp-2">
-                {item.summary}
-              </p>
-              
-              <div className="flex items-center gap-4 text-sm text-gray-500">
-                <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  {formatDate(item.published_at)}
-                </div>
-                {item.source && (
-                  <div className="flex items-center gap-1">
-                    <Tag className="w-4 h-4" />
-                    {item.source}
-                  </div>
-                )}
+          <div key={index} className="w-full rounded-lg bg-white shadow hover:shadow-lg transition-shadow duration-200 p-6">
+            <a 
+              href={item.link} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="group"
+            >
+              <h3 className="text-xl font-semibold mb-3 group-hover:text-blue-600 flex items-center gap-2">
+                {item.title}
+                <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  ↗
+                </span>
+              </h3>
+            </a>
+            
+            <p className="text-gray-600 mb-4 line-clamp-2">
+              {item.summary}
+            </p>
+            
+            <div className="flex items-center gap-4 text-sm text-gray-500">
+              <div className="flex items-center gap-1">
+                <span>🕒</span>
+                {formatDate(item.published_at)}
               </div>
-            </CardContent>
-          </Card>
+              {item.source && (
+                <div className="flex items-center gap-1">
+                  <span>📰</span>
+                  {item.source}
+                </div>
+              )}
+            </div>
+          </div>
         ))
       )}
     </div>
