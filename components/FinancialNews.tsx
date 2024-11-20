@@ -97,7 +97,7 @@ const FinancialNews: React.FC = () => {
       {/* Gainers */}
       <div className="space-y-4">
         <h3 className="text-xl font-semibold text-green-600">Top Gainers</h3>
-        {movers.gainers.map((stock, index) => (
+        {movers.gainers.map((stock) => (
           <div key={stock.symbol} className="bg-white rounded-lg shadow p-4">
             <div className="flex justify-between items-start">
               <div>
@@ -116,7 +116,7 @@ const FinancialNews: React.FC = () => {
       {/* Losers */}
       <div className="space-y-4">
         <h3 className="text-xl font-semibold text-red-600">Top Losers</h3>
-        {movers.losers.map((stock, index) => (
+        {movers.losers.map((stock) => (
           <div key={stock.symbol} className="bg-white rounded-lg shadow p-4">
             <div className="flex justify-between items-start">
               <div>
@@ -162,8 +162,8 @@ const FinancialNews: React.FC = () => {
           </div>
         ))
       ) : activeTab === 'news' ? (
-        news.map((item, index) => (
-          <div key={index} className="w-full rounded-lg bg-white shadow hover:shadow-lg transition-shadow duration-200 p-6">
+        news.map((item) => (
+          <div key={item.link} className="w-full rounded-lg bg-white shadow hover:shadow-lg transition-shadow duration-200 p-6">
             <a 
               href={item.link} 
               target="_blank" 
