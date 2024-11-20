@@ -10,12 +10,32 @@ interface TopMoverItem {
   volume: string;
 }
 
+interface CompanyOverview {
+  Name: string;
+  Description: string;
+  Sector: string;
+}
+
 interface AlphaVantageTopMoversResponse {
   metadata: string;
   last_updated: string;
   top_gainers: TopMoverItem[];
   top_losers: TopMoverItem[];
   most_actively_traded: TopMoverItem[];
+}
+
+async function getCompanyName(symbol: string, apiKey: string): Promise<string> {
+  try {
+    const response = await fetch(
+      `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${symbol}&apikey=${apiKey}`
+    );
+    if (!response.ok) return symbol;
+    
+    const data: CompanyOverview = await response.json();
+    return data.Name || symbol;
+  } catch (error) {
+    return symbol;
+  }
 }
 
 export async function GET() {
@@ -41,29 +61,43 @@ export async function GET() {
     }
 
     const data: AlphaVantageTopMoversResponse = await response.json();
-    
-    // Log the response for debugging
-    console.log('Alpha Vantage Response:', JSON.stringify(data, null, 2));
 
-    // Transform the data to a cleaner format
-    const transformed = {
-      gainers: (data.top_gainers || []).map(item => ({
+    // Get company names for all symbols
+    const gainersPromises = (data.top_gainers || []).map(async (item) => {
+      const companyName = await getCompanyName(item.ticker, API_KEY);
+      return {
         symbol: item.ticker,
-        name: item.ticker, // Alpha Vantage doesn't provide company names in this endpoint
+        name: companyName,
         change: parseFloat(item.change_amount),
         price: item.price,
-        change_percent: item.change_percentage
-      })),
-      losers: (data.top_losers || []).map(item => ({
+        change_percent: item.change_percentage,
+        volume: item.volume,
+        google_finance_url: `https://www.google.com/finance/quote/${item.ticker}:NYSE`
+      };
+    });
+
+    const losersPromises = (data.top_losers || []).map(async (item) => {
+      const companyName = await getCompanyName(item.ticker, API_KEY);
+      return {
         symbol: item.ticker,
-        name: item.ticker, // Alpha Vantage doesn't provide company names in this endpoint
+        name: companyName,
         change: parseFloat(item.change_amount),
         price: item.price,
-        change_percent: item.change_percentage
-      }))
-    };
+        change_percent: item.change_percentage,
+        volume: item.volume,
+        google_finance_url: `https://www.google.com/finance/quote/${item.ticker}:NYSE`
+      };
+    });
 
-    return NextResponse.json(transformed);
+    const [gainers, losers] = await Promise.all([
+      Promise.all(gainersPromises),
+      Promise.all(losersPromises)
+    ]);
+
+    return NextResponse.json({
+      gainers,
+      losers
+    });
   } catch (error) {
     console.error('Alpha Vantage API error:', error);
     return NextResponse.json(
