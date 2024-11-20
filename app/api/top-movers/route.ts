@@ -33,7 +33,8 @@ async function getCompanyName(symbol: string, apiKey: string): Promise<string> {
     
     const data: CompanyOverview = await response.json();
     return data.Name || symbol;
-  } catch (error) {
+  } catch {
+    // If there's any error, return the symbol as fallback
     return symbol;
   }
 }
