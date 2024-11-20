@@ -1,7 +1,19 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import type { NewsItem, NewsApiResponse } from '@/types/news';
+
+// Types defined within the component file
+interface NewsItem {
+  title: string;
+  summary: string;
+  link: string;
+  published_at: number;
+  source: string;
+}
+
+interface NewsApiResponse {
+  news: NewsItem[];
+}
 
 const FinancialNews: React.FC = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
@@ -50,7 +62,6 @@ const FinancialNews: React.FC = () => {
       </div>
 
       {loading ? (
-        // Simple loading state without Skeleton component
         Array(3).fill(null).map((_, i) => (
           <div key={i} className="w-full rounded-lg bg-white shadow p-6 animate-pulse">
             <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
