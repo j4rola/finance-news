@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 
-// Types defined within the component file
 interface NewsItem {
   title: string;
   summary: string;
@@ -11,31 +10,53 @@ interface NewsItem {
   source: string;
 }
 
+interface StockMove {
+  symbol: string;
+  name: string;
+  change: number;
+  price: string;
+  change_percent: string;
+}
+
 interface NewsApiResponse {
   news: NewsItem[];
 }
 
+interface TopMoversResponse {
+  gainers: StockMove[];
+  losers: StockMove[];
+}
+
 const FinancialNews: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'news' | 'movers'>('news');
   const [news, setNews] = useState<NewsItem[]>([]);
+  const [movers, setMovers] = useState<TopMoversResponse>({ gainers: [], losers: [] });
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchNews = async () => {
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        const response = await fetch('/api/yahoo-finance-news');
-        if (!response.ok) throw new Error('Failed to fetch news');
-        const data: NewsApiResponse = await response.json();
-        setNews(data.news);
-        setLoading(false);
+        if (activeTab === 'news') {
+          const response = await fetch('/api/financial-news');
+          if (!response.ok) throw new Error('Failed to fetch news');
+          const data: NewsApiResponse = await response.json();
+          setNews(data.news);
+        } else {
+          const response = await fetch('/api/top-movers');
+          if (!response.ok) throw new Error('Failed to fetch top movers');
+          const data: TopMoversResponse = await response.json();
+          setMovers(data);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
-        setLoading(false);
       }
+      setLoading(false);
     };
 
-    fetchNews();
-  }, []);
+    fetchData();
+  }, [activeTab]);
 
   const formatDate = (timestamp: number): string => {
     return new Date(timestamp * 1000).toLocaleDateString('en-US', {
@@ -46,10 +67,77 @@ const FinancialNews: React.FC = () => {
     });
   };
 
+  const renderTabs = () => (
+    <div className="flex space-x-1 border-b mb-6">
+      <button
+        onClick={() => setActiveTab('news')}
+        className={`px-4 py-2 font-medium ${
+          activeTab === 'news'
+            ? 'text-blue-600 border-b-2 border-blue-600'
+            : 'text-gray-500 hover:text-gray-700'
+        }`}
+      >
+        News
+      </button>
+      <button
+        onClick={() => setActiveTab('movers')}
+        className={`px-4 py-2 font-medium ${
+          activeTab === 'movers'
+            ? 'text-blue-600 border-b-2 border-blue-600'
+            : 'text-gray-500 hover:text-gray-700'
+        }`}
+      >
+        Top Gainers & Losers
+      </button>
+    </div>
+  );
+
+  const renderMovers = () => (
+    <div className="grid md:grid-cols-2 gap-6">
+      {/* Gainers */}
+      <div className="space-y-4">
+        <h3 className="text-xl font-semibold text-green-600">Top Gainers</h3>
+        {movers.gainers.map((stock, index) => (
+          <div key={stock.symbol} className="bg-white rounded-lg shadow p-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <h4 className="font-semibold">{stock.symbol}</h4>
+                <p className="text-sm text-gray-600">{stock.name}</p>
+              </div>
+              <div className="text-right">
+                <p className="font-semibold">${stock.price}</p>
+                <p className="text-sm text-green-600">+{stock.change_percent}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Losers */}
+      <div className="space-y-4">
+        <h3 className="text-xl font-semibold text-red-600">Top Losers</h3>
+        {movers.losers.map((stock, index) => (
+          <div key={stock.symbol} className="bg-white rounded-lg shadow p-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <h4 className="font-semibold">{stock.symbol}</h4>
+                <p className="text-sm text-gray-600">{stock.name}</p>
+              </div>
+              <div className="text-right">
+                <p className="font-semibold">${stock.price}</p>
+                <p className="text-sm text-red-600">{stock.change_percent}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   if (error) {
     return (
       <div className="w-full rounded-lg bg-red-50 p-6">
-        <p className="text-red-600">Error loading news: {error}</p>
+        <p className="text-red-600">Error loading data: {error}</p>
       </div>
     );
   }
@@ -57,8 +145,8 @@ const FinancialNews: React.FC = () => {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
       <div className="w-full rounded-lg bg-white shadow p-6">
-        <h2 className="text-2xl font-bold">Financial News</h2>
-        <p className="text-gray-600">Latest updates from Yahoo Finance</p>
+        <h2 className="text-2xl font-bold">Financial Dashboard</h2>
+        {renderTabs()}
       </div>
 
       {loading ? (
@@ -73,7 +161,7 @@ const FinancialNews: React.FC = () => {
             </div>
           </div>
         ))
-      ) : (
+      ) : activeTab === 'news' ? (
         news.map((item, index) => (
           <div key={index} className="w-full rounded-lg bg-white shadow hover:shadow-lg transition-shadow duration-200 p-6">
             <a 
@@ -108,6 +196,8 @@ const FinancialNews: React.FC = () => {
             </div>
           </div>
         ))
+      ) : (
+        renderMovers()
       )}
     </div>
   );
