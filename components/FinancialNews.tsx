@@ -16,6 +16,8 @@ interface StockMove {
   change: number;
   price: string;
   change_percent: string;
+  volume?: string;
+  google_finance_url: string;
 }
 
 interface NewsApiResponse {
@@ -37,6 +39,7 @@ const FinancialNews: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setError(null);
       try {
         if (activeTab === 'news') {
           const response = await fetch('/api/financial-news');
@@ -97,39 +100,73 @@ const FinancialNews: React.FC = () => {
       {/* Gainers */}
       <div className="space-y-4">
         <h3 className="text-xl font-semibold text-green-600">Top Gainers</h3>
-        {movers.gainers.map((stock) => (
-          <div key={stock.symbol} className="bg-white rounded-lg shadow p-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <h4 className="font-semibold">{stock.symbol}</h4>
-                <p className="text-sm text-gray-600">{stock.name}</p>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold">${stock.price}</p>
-                <p className="text-sm text-green-600">+{stock.change_percent}</p>
+        {movers.gainers.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-4">
+            <p className="text-gray-500">No gainers data available</p>
+          </div>
+        ) : (
+          movers.gainers.map((stock) => (
+            <div key={stock.symbol} className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <a 
+                    href={stock.google_finance_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group block"
+                  >
+                    <h4 className="font-semibold group-hover:text-blue-600 flex items-center gap-1">
+                      {stock.symbol}
+                      <span className="text-xs opacity-0 group-hover:opacity-100">↗</span>
+                    </h4>
+                    <p className="text-sm text-gray-600 line-clamp-1">{stock.name}</p>
+                    <p className="text-xs text-gray-500 mt-1">Volume: {stock.volume || 'N/A'}</p>
+                  </a>
+                </div>
+                <div className="text-right ml-4">
+                  <p className="font-semibold">${stock.price}</p>
+                  <p className="text-sm text-green-600">{stock.change_percent}</p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Losers */}
       <div className="space-y-4">
         <h3 className="text-xl font-semibold text-red-600">Top Losers</h3>
-        {movers.losers.map((stock) => (
-          <div key={stock.symbol} className="bg-white rounded-lg shadow p-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <h4 className="font-semibold">{stock.symbol}</h4>
-                <p className="text-sm text-gray-600">{stock.name}</p>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold">${stock.price}</p>
-                <p className="text-sm text-red-600">{stock.change_percent}</p>
+        {movers.losers.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-4">
+            <p className="text-gray-500">No losers data available</p>
+          </div>
+        ) : (
+          movers.losers.map((stock) => (
+            <div key={stock.symbol} className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <a 
+                    href={stock.google_finance_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group block"
+                  >
+                    <h4 className="font-semibold group-hover:text-blue-600 flex items-center gap-1">
+                      {stock.symbol}
+                      <span className="text-xs opacity-0 group-hover:opacity-100">↗</span>
+                    </h4>
+                    <p className="text-sm text-gray-600 line-clamp-1">{stock.name}</p>
+                    <p className="text-xs text-gray-500 mt-1">Volume: {stock.volume || 'N/A'}</p>
+                  </a>
+                </div>
+                <div className="text-right ml-4">
+                  <p className="font-semibold">${stock.price}</p>
+                  <p className="text-sm text-red-600">{stock.change_percent}</p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
