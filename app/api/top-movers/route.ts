@@ -86,7 +86,7 @@ export async function GET() {
         price: item.price,
         change_percent: item.change_percentage,
         volume: item.volume,
-        google_finance_url: `https://www.google.com/finance/quote/${item.ticker}`
+        google_finance_url: `https://www.google.com/finance/search?q=${item.ticker}`
       };
     });
 
