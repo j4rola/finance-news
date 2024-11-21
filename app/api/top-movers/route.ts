@@ -8,12 +8,12 @@ interface TopMoverItem {
   change_amount: string;
   change_percentage: string;
   volume: string;
+  exchange?: string;  // Some APIs include this
 }
 
 interface CompanyOverview {
   Name: string;
-  Description: string;
-  Sector: string;
+  Exchange: string;
 }
 
 interface AlphaVantageTopMoversResponse {
@@ -24,18 +24,32 @@ interface AlphaVantageTopMoversResponse {
   most_actively_traded: TopMoverItem[];
 }
 
-async function getCompanyName(symbol: string, apiKey: string): Promise<string> {
+async function getCompanyInfo(symbol: string, apiKey: string): Promise<{ name: string; exchange: string }> {
   try {
     const response = await fetch(
       `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${symbol}&apikey=${apiKey}`
     );
-    if (!response.ok) return symbol;
+    if (!response.ok) return { name: symbol, exchange: 'NASDAQ' }; // Default to NASDAQ if we can't get info
     
     const data: CompanyOverview = await response.json();
-    return data.Name || symbol;
+    return {
+      name: data.Name || symbol,
+      exchange: data.Exchange || 'NASDAQ' // Default to NASDAQ if exchange info is missing
+    };
   } catch {
-    // If there's any error, return the symbol as fallback
-    return symbol;
+    return { name: symbol, exchange: 'NASDAQ' }; // Default to NASDAQ on error
+  }
+}
+
+function getGoogleFinanceUrl(symbol: string, exchange: string): string {
+  // Handle different exchanges
+  if (exchange.includes('NYSE')) {
+    return `https://www.google.com/finance/quote/${symbol}:NYSE`;
+  } else if (exchange.includes('NASDAQ')) {
+    return `https://www.google.com/finance/quote/${symbol}:NASDAQ`;
+  } else {
+    // If we're not sure about the exchange, use the search URL
+    return `https://www.google.com/finance/search?q=${symbol}`;
   }
 }
 
@@ -63,30 +77,30 @@ export async function GET() {
 
     const data: AlphaVantageTopMoversResponse = await response.json();
 
-    // Get company names for all symbols
+    // Get company names and exchange info for all symbols
     const gainersPromises = (data.top_gainers || []).map(async (item) => {
-      const companyName = await getCompanyName(item.ticker, API_KEY);
+      const companyInfo = await getCompanyInfo(item.ticker, API_KEY);
       return {
         symbol: item.ticker,
-        name: companyName,
+        name: companyInfo.name,
         change: parseFloat(item.change_amount),
         price: item.price,
         change_percent: item.change_percentage,
         volume: item.volume,
-        google_finance_url: `https://www.google.com/finance/quote/${item.ticker}`
+        google_finance_url: getGoogleFinanceUrl(item.ticker, companyInfo.exchange)
       };
     });
 
     const losersPromises = (data.top_losers || []).map(async (item) => {
-      const companyName = await getCompanyName(item.ticker, API_KEY);
+      const companyInfo = await getCompanyInfo(item.ticker, API_KEY);
       return {
         symbol: item.ticker,
-        name: companyName,
+        name: companyInfo.name,
         change: parseFloat(item.change_amount),
         price: item.price,
         change_percent: item.change_percentage,
         volume: item.volume,
-        google_finance_url: `https://www.google.com/finance/search?q=${item.ticker}`
+        google_finance_url: getGoogleFinanceUrl(item.ticker, companyInfo.exchange)
       };
     });
 
